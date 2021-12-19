@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<!--
+Powered by Bitty Engine
+Copyright (C) 2020 - 2021 Tony Wang
+Learn more: https://paladin-t.github.io/bitty/
+Get Bitty Engine: https://store.steampowered.com/app/1386180/
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Hyper Dungeon Crawler is a turn-based roguelike RPG with crafting.">
+    <meta name="twitter:card" content="Hyper Dungeon Crawler is a turn-based roguelike RPG with crafting.">
+    <meta name="og:title" property="og:title" content="Hyper Dungeon Crawler">
+    <meta name="og:description" property="og:description" content="Hyper Dungeon Crawler is a turn-based roguelike RPG with crafting.">
+    <title>Hyper Dungeon Crawler</title>
+    <link rel="shortcut icon" href="https://paladin-t.github.io/bitty/favicon.ico" />
+    <link rel="apple-touch-icon" href="https://paladin-t.github.io/bitty/icon.png" />
+    <style type="text/css">
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        background-color: #fff;
+        font: 14px Helvetica, Arial, sans-serif;
+      }
+      #page {
+        width: 360px;
+        height: 360px;
+        margin: 0;
+        border-radius: 0;
+        padding: 0;
+        background-color: #fff;
+      }
+      #content {
+        position: relative;
+      }
+      #canvas {
+        width: 360px;
+        height: 360px;
+        margin: 0;
+        display: block;
+      }
+      #loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-50%);
+        z-index: 10;
+      }
+      #tips {
+        width: 360px;
+        height: 240px;
+        margin: 0;
+        display: none;
+        resize: vertical;
+        border: none;
+        background-color: rgb(200, 200, 200);
+        overflow: auto;
+      }
+      .spinner {
+        width: 50px;
+        height: 50px;
+        margin: 0px auto;
+        border-left: 10px solid rgb(179, 179, 179);
+        border-right: 10px solid rgb(179, 179, 179);
+        border-bottom: 10px solid rgb(179, 179, 179);
+        border-top: 10px solid rgb(126, 126, 126);
+        border-radius: 100%;
+        background-color: rgba(255, 255, 255, 0);
+        -webkit-animation: rotation .8s linear infinite;
+        -moz-animation: rotation .8s linear infinite;
+        -o-animation: rotation .8s linear infinite;
+        animation: rotation 0.8s linear infinite;
+      }
+      @-webkit-keyframes rotation { from { -webkit-transform: rotate(0deg); } to { -webkit-transform: rotate(360deg); } }
+      @-moz-keyframes rotation { from { -moz-transform: rotate(0deg); } to { -moz-transform: rotate(360deg); } }
+      @-o-keyframes rotation { from { -o-transform: rotate(0deg); } to { -o-transform: rotate(360deg); } }
+      @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      .button {
+        border-radius: 6px;
+        padding: 5px 20px 5px 20px;
+        background: #3498db;
+        color: #ffffff;
+        font-size: 14px;
+        text-decoration: none;
+      }
+      .button:hover {
+        background: #3cb0fd;
+        text-decoration: none;
+      }
+      a:link, a:visited {
+        color: #69c;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="page">
+      <div id="content">
+        <canvas id="canvas" width="360" height="360"></canvas>
+        <div id="loading">
+          <figure id="spinner">
+            <div class="spinner">
+          </figure>
+        </div>
+      </div>
+      <br>
+      <!-- <div id="image-container" style="display: none;">
+        Exported. Press and hold or right-click to save.
+        <div id="image" style="width: 50%;">
+        </div>
+      </div> -->
+      <div id="image-container" style="height: 100%; width: 100%; padding-bottom: 10px; display: none;">
+        <div id="image" style="display: inline-block; width: 90px; vertical-align: middle;">
+        </div>
+        <div style="width: 260px; height: 90px; float: right;">
+          Exported. Press and hold or right-click to save.
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript">
+      // Initialize the module.
+      var canvas = document.getElementById('canvas');
+      var spinner = document.getElementById('spinner');
+      var Module = {
+        canvas: canvas,
+        print: function (text) {
+          console.log(text);
+        },
+        printErr: function (text) {
+          console.warn(text);
+        },
+        setStatus: function (text) {
+          if (!Module.setStatus.last) {
+            Module.setStatus.last = {
+              time: Date.now(),
+              text: ''
+            };
+          }
+          if (text === Module.setStatus.text)
+            return;
+          var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+          var now = Date.now();
+          if (m && now - Date.now() < 30)
+            return;
+          if (m) {
+            text = m[1];
+            spinner.hidden = false;
+          } else {
+            if (!text) {
+              spinner.hidden = true;
+            }
+          }
+        }
+      };
+      Module.setStatus('Loading...');
+      window.onerror = function () {
+        Module.setStatus('Error, see JavaScript console.');
+        spinner.style.display = 'none';
+        Module.setStatus = function (text) {
+          if (text)
+            Module.printErr('[post-exception status] ' + text);
+        };
+      };
+      document.addEventListener('fullscreenchange', function (event) {
+        if (document.fullscreenElement) {
+          console.log('Entered fullscreen mode.');
+        } else {
+          console.log('Left fullscreen mode.');
+        }
+      });
+      canvas.addEventListener('touchstart', function (event) {
+        event.preventDefault();
+      }, false);
+      canvas.addEventListener('touchend', function (event) {
+        event.preventDefault();
+      }, false);
+      canvas.addEventListener('mousedown', function (_) {
+        window.focus();
+      }, false);
+      // canvas.addEventListener('contextmenu', function(event) {
+      //   event.preventDefault();
+      // }, false);
+
+      // Returns whether to show a play button before running.
+      function getPlayButtonEnabled() {
+        return false;
+      }
+
+      function gingerbreadSaveImage(base64) {
+        try {
+          var data = 'data:image/png;base64,' + base64;
+          var img = '<img src="' + data + '" style="width: 100%;" />';
+          var divImg = document.getElementById('image');
+          divImg.innerHTML = img;
+          var divContainer = document.getElementById('image-container');
+          divContainer.style = 'height: 100%; width: 100%; padding-bottom: 10px; display: block;'
+          window.open(data);
+          // if (parent != window && parent.document != document) {
+          //   parent.document.getElementById('gingerbread_image_output').innerHTML = img;
+          // }
+        } catch (err) {
+          console.warn(err.toString());
+        }
+      }
+    </script>
+    <script async type="text/javascript" src="bitty.js"></script>
+  </body>
+</html>
